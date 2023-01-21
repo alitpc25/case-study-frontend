@@ -9,6 +9,7 @@ import { BsArrowUpShort, BsArrowDownShort } from "react-icons/bs"
 import moment from "moment"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import MyDatePicker from '../components/MyDatePicker';
+import PaginateComponent from '../components/PaginateComponent';
 
 function InteractionDetail() {
 
@@ -24,13 +25,29 @@ function InteractionDetail() {
 
     const [interactionContent, setInteractionContent] = useState("")
 
-    const getCandidateInteractions = (candidateId) => {
-        return axios.get('/api/v1/interactions/getAll?candidateId=' + location.state.candidateId)
+    // Pagination 
+    const handlePageClick = (e) => {
+        setCurrentPage(e.selected+1)
+        setIsInteractionsChanged(true)
+    }
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [interactionsPerPage, setInteractionsPerPage] = useState(9);
+    const [pageNumber, setPageNumber] = useState(1); // total page number
+    const [sortedByState, setSortedByState] = useState(null);
+    const [sortOrderState, setSortOrderState] = useState(null);
+
+    const getCandidateInteractions = (currentPage, interactionsPerPage) => {
+        return axios.get(`/api/v1/interactions?candidateId=${location.state.candidateId}&page=${currentPage}&size=${interactionsPerPage}`)
             .then(function (response) {
-                setCandidateInteractions(response.data)
+                setCandidateInteractions(response.data.content)
+                setCurrentPage(response.data.number + 1);
+                setPageNumber(parseInt(response.data.totalPages));
             })
             .catch(function (error) {
-                console.log(error);
+                if(error.response.status==404) {
+                    console.log(setCandidateInteractions([]))
+                }
                 toast.error(error.response.data, {
                     toastId:"errorMessage1",
                     position: "top-right",
@@ -45,13 +62,46 @@ function InteractionDetail() {
             })
     }
 
+    const getCandidateInteractionsSorted = (currentPage, interactionsPerPage, sortedBy, sortOrder) => {
+        return axios.get(`/api/v1/interactions?candidateId=${location.state.candidateId}&page=${currentPage}&size=${interactionsPerPage}&sortedBy=${sortedBy}&sortOrder=${sortOrder}`)
+            .then(function (response) {
+                setCandidateInteractions(response.data.content)
+                setCurrentPage(response.data.number + 1);
+                setPageNumber(parseInt(response.data.totalPages));
+            })
+            .catch(function (error) {
+                if(error.response.status==404) {
+                    console.log(setCandidateInteractions([]))
+                }
+                toast.error(error.response.data, {
+                    toastId:"errorMessage1",
+                    position: "top-right",
+                    autoClose: 1500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                });
+            })
+    }
+
+    const handleSort = (e, sortedBy, sortOrder) => {
+        setSortedByState(sortedBy)
+        setSortOrderState(sortOrder)
+        getCandidateInteractionsSorted(currentPage, interactionsPerPage, sortedBy, sortOrder);
+    }
+
     const getInteractionById = (interactionId) => {
         return axios.get('/api/v1/interactions/' + interactionId)
             .then(function (response) {
                 setInteractionContent(response.data.content)
             })
             .catch(function (error) {
-                console.log(error);
+                if(error.response.status==404) {
+                    console.log(setCandidateInteractions([]))
+                }
                 toast.error(error.response.data, {
                     toastId:"errorMessage1",
                     position: "top-right",
@@ -67,7 +117,11 @@ function InteractionDetail() {
     }
 
     useEffect(() => {
-        getCandidateInteractions(location.state.candidateId)
+        if(sortedByState == null || sortOrderState == null) {
+            getCandidateInteractions(currentPage, interactionsPerPage)
+        } else {
+            getCandidateInteractionsSorted(currentPage, interactionsPerPage, sortedByState, sortOrderState)
+        }
         setIsInteractionsChanged(false)
     }, [isInteractionsChanged])
 
@@ -118,7 +172,6 @@ function InteractionDetail() {
     });
 
     const updateInteraction = (values) => {
-        console.log(values)
         return axios.patch('/api/v1/interactions/' + selectedInteraction.id,
             {
                 interactionType: values.interactionType,
@@ -127,7 +180,7 @@ function InteractionDetail() {
                 candidateResponded: values.candidateResponded
             })
             .then(function (response) {
-                setIsInteractionsChanged(true)
+                
                 handleCloseEditModal();
                 toast.success("Interaction info successfully updated.", {
                     position: "top-right",
@@ -142,7 +195,6 @@ function InteractionDetail() {
             })
             .catch(function (error) {
                 console.log(error);
-                setIsInteractionsChanged(false)
                 toast.error(error.response.data, {
                     position: "top-right",
                     autoClose: 1500,
@@ -152,15 +204,17 @@ function InteractionDetail() {
                     draggable: true,
                     progress: undefined,
                     theme: "light",
-                });
+                })
             })
+            .finally(() => {
+                setIsInteractionsChanged(true)
+            }) 
     }
 
     const handleDeleteInteraction = (interactionId) => {
         axios.delete('/api/v1/interactions/' + interactionId)
             .then(function (response) {
-                setIsInteractionsChanged(true)
-                toast.success("Interaction successfully removed.", {
+                toast.success(response.data, {
                     position: "top-right",
                     autoClose: 1500,
                     hideProgressBar: false,
@@ -174,7 +228,6 @@ function InteractionDetail() {
             })
             .catch(function (error) {
                 console.log(error);
-                setIsInteractionsChanged(false)
                 toast.error(error.response.data, {
                     position: "top-right",
                     autoClose: 1500,
@@ -186,14 +239,17 @@ function InteractionDetail() {
                     theme: "light",
                 });
             })
+            .finally(() => {
+                setIsInteractionsChanged(true)
+            }) 
     }
 
     const tableHeaders = ["Type", "Content", "Date", "Candidate Responded"]
 
     return (<div>
         <NavbarComponent candidateId={location.state.candidateId} addButtonName="New Interaction" setIsInteractionsChanged={setIsInteractionsChanged}></NavbarComponent>
-        <div>
-            Control block
+        <div  className="d-flex justify-content-evenly p-2" >
+            <PaginateComponent handlePageClick={handlePageClick} pageNumber={pageNumber}/>
         </div>
         <div>
             <ToastContainer className="mt-4" />
@@ -205,8 +261,8 @@ function InteractionDetail() {
                                 <div className="flex items-center">
                                     {headerName}
                                     {(headerName === "Date") ? <>
-                                        <BsArrowUpShort size={20}></BsArrowUpShort>
-                                        <BsArrowDownShort size={20}></BsArrowDownShort>
+                                        <BsArrowUpShort onClick={(event) => handleSort(event, headerName.toLowerCase(), "DESC")} size={25}></BsArrowUpShort>
+                                        <BsArrowDownShort onClick={(event) => handleSort(event, headerName.toLowerCase(), "ASC")} size={25}></BsArrowDownShort>
                                     </>
                                         : null}
                                 </div>
@@ -280,20 +336,20 @@ function InteractionDetail() {
                         {() => (
                             <Form className=''>
                                 <div className=''>
-                                    <label htmlFor="type">Status</label>
+                                    <label htmlFor="interactionType">Interaction Type</label>
                                     <div className='p-2'>
-                                        <Field name="type" as="select" placeholder="Select status" className="form-control form-select">
+                                        <Field name="interactionType" as="select" placeholder="Select type" className="form-control form-select">
                                             <option defaultValue="SELECT">Select type</option>
                                             <option value="PHONE">Phone</option>
                                             <option value="MAIL">Mail</option>
                                         </Field>
-                                        <ErrorMessage name="type" component="div" />
+                                        <ErrorMessage name="interactionType" component="div" />
                                     </div>
                                 </div>
                                 <div className=''>
                                     <label htmlFor="content">Content</label>
                                     <div className='p-2'>
-                                        <Field type="textarea" name="content" className='form-control' />
+                                        <Field component="textarea" type="textarea" name="content" className='form-control' />
                                         <ErrorMessage name="content" component="div" />
                                     </div>
                                 </div>
@@ -304,10 +360,10 @@ function InteractionDetail() {
                                     </div>
                                 </div>
                                 <div className=''>
-                                    <label htmlFor="candidateResponded">Status</label>
+                                    <label htmlFor="candidateResponded">Responded</label>
                                     <div className='p-2'>
-                                        <Field name="candidateResponded" as="select" placeholder="Select status" className="form-control form-select">
-                                            <option defaultValue="SELECT">Select status</option>
+                                        <Field name="candidateResponded" as="select" placeholder="Select responded" className="form-control form-select">
+                                            <option defaultValue="SELECT">Select responded</option>
                                             <option value="TRUE">True</option>
                                             <option value="FALSE">False</option>
                                         </Field>

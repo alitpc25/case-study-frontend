@@ -2,10 +2,11 @@ import { useState } from "react";
 import "./NavbarComponent.css";
 import { Modal, Button } from 'react-bootstrap';
 import axios from "axios";
-import { Formik, Form, Field, ErrorMessage, useField } from "formik"
+import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from 'yup';
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import MyDatePicker from "./MyDatePicker";
+import MyPhoneInput from "./MyPhoneInput";
 
 function NavbarComponent(props) {
 
@@ -23,7 +24,7 @@ function NavbarComponent(props) {
         surname: "",
         mail: "",
         phone: "",
-        candidateStatus: ""
+        status: ""
     };
 
     const CreateCandidateSchema = Yup.object().shape({
@@ -31,7 +32,7 @@ function NavbarComponent(props) {
         surname: Yup.string().required("Surname is required"),
         mail: Yup.string().email().required("Mail is required"),
         phone: Yup.string().required("Phone is required"),
-        candidateStatus: Yup.string().required("Status is required")
+        status: Yup.string().required("Status is required")
     });
 
     const saveCandidate = (values) => {
@@ -41,10 +42,9 @@ function NavbarComponent(props) {
                 surname: values.surname,
                 mail: values.mail,
                 phone: values.phone,
-                candidateStatus: values.candidateStatus,
+                status: values.status,
             })
             .then(function (response) {
-                props.setIsCandidatesChanged(true)
                 handleCloseCandidateModal();
                 toast.success("Candidate successfully added.", {
                     position: "top-right",
@@ -59,7 +59,6 @@ function NavbarComponent(props) {
             })
             .catch(function (error) {
                 console.log(error);
-                props.setIsCandidatesChanged(false)
                 toast.error(error.response.data, {
                     position: "top-right",
                     autoClose: 1500,
@@ -71,6 +70,9 @@ function NavbarComponent(props) {
                     theme: "light",
                 });
             })
+            .finally(() => {
+                props.setIsCandidatesChanged(true)
+            }) 
     }
 
     const initialValuesInteraction = {
@@ -96,7 +98,6 @@ function NavbarComponent(props) {
                 candidateResponded: values.candidateResponded,
             })
             .then(function (response) {
-                props.setIsInteractionsChanged(true)
                 handleCloseInteractionModal();
                 toast.success("Interaction successfully added.", {
                     position: "top-right",
@@ -111,7 +112,6 @@ function NavbarComponent(props) {
             })
             .catch(function (error) {
                 console.log(error);
-                props.setIsInteractionsChanged(false)
                 toast.error(error.response.data, {
                     position: "top-right",
                     autoClose: 1500,
@@ -122,6 +122,8 @@ function NavbarComponent(props) {
                     progress: undefined,
                     theme: "light",
                 });
+            }).finally(() => {
+                props.setIsInteractionsChanged(true)
             })
     }
 
@@ -176,21 +178,21 @@ function NavbarComponent(props) {
                                     <div className=''>
                                         <label htmlFor="phone">Phone</label>
                                         <div className='p-2'>
-                                            <Field type="text" name="phone" className='form-control' />
+                                        <MyPhoneInput name="phone"></MyPhoneInput>
                                             <ErrorMessage name="phone" component="div" />
                                         </div>
                                     </div>
                                     <div className=''>
-                                        <label htmlFor="candidateStatus">Status</label>
+                                        <label htmlFor="status">Status</label>
                                         <div className='p-2'>
-                                            <Field name="candidateStatus" as="select" placeholder="Select status" className="form-control form-select">
+                                            <Field name="status" as="select" placeholder="Select status" className="form-control form-select">
                                                 <option defaultValue="SELECT">Select status</option>
                                                 <option value="SOURCED">Sourced</option>
                                                 <option value="INTERVIEWING">Interviewing</option>
                                                 <option value="OFFER_SENT">Offer sent</option>
                                                 <option value="HIRED">Hired</option>
                                             </Field>
-                                            <ErrorMessage name="candidateStatus" component="div" />
+                                            <ErrorMessage name="status" component="div" />
                                         </div>
                                     </div>
                                     <div className="d-flex justify-content-around">
@@ -235,7 +237,7 @@ function NavbarComponent(props) {
                                     <div className=''>
                                         <label htmlFor="content">Content</label>
                                         <div className='p-2'>
-                                            <Field type="textarea" name="content" className='form-control' />
+                                            <Field component="textarea" type="textarea" name="content" className='form-control' />
                                             <ErrorMessage name="content" component="div" />
                                         </div>
                                     </div>
