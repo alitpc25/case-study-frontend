@@ -36,7 +36,10 @@ function Home() {
         setSelectedCandidate({
             id: candidateInfo.id,
             name: candidateInfo.name,
-            surname: candidateInfo.surname
+            surname: candidateInfo.surname,
+            mail: candidateInfo.mail,
+            phone: candidateInfo.phone,
+            status: candidateInfo.status
         })
     }
 
@@ -71,7 +74,7 @@ function Home() {
                     status: values.status,
                 });
             handleCloseEditModal();
-            toast.success(response.data, {
+            toast.success("Candidate " + response.data.name + " successfully edited.", {
                 position: "top-right",
                 autoClose: 1500,
                 hideProgressBar: false,
@@ -326,12 +329,11 @@ function Home() {
                                     <div className=''>
                                         <label htmlFor="status">Status</label>
                                         <div className='p-2'>
-                                            <Field name="status" as="select" placeholder="Select status" className="form-control form-select">
-                                                <option defaultValue="SELECT">Select status</option>
-                                                <option value="SOURCED">Sourced</option>
-                                                <option value="INTERVIEWING">Interviewing</option>
-                                                <option value="OFFER_SENT">Offer sent</option>
-                                                <option value="HIRED">Hired</option>
+                                            <Field name="status" as="select" className="form-control form-select">
+                                                <option>Sourced</option>
+                                                <option>Interviewing</option>
+                                                <option>Offer sent</option>
+                                                <option>Hired</option>
                                             </Field>
                                             <ErrorMessage name="status" component="div" />
                                         </div>
