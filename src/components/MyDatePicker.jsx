@@ -16,7 +16,6 @@ function MyDatePicker({ name = "" }) {
       timeInputLabel="Time:"
       dateFormat="MM/dd/yyyy h:mm aa"
       showTimeInput
-      required
     />
   );
 };
