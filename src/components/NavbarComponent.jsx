@@ -3,10 +3,11 @@ import "./NavbarComponent.css";
 import { Modal, Button } from 'react-bootstrap';
 import axios from "axios";
 import { Formik, Form, Field, ErrorMessage } from "formik"
-import * as Yup from 'yup';
-import { toast } from "react-toastify";
+import { toastError, toastSuccess } from "../utils/toastMessages";
 import MyDatePicker from "./MyDatePicker";
 import MyPhoneInput from "./MyPhoneInput";
+import { CreateCandidateSchema, CreateInteractionSchema } from "../utils/yupSchemas";
+import { initialValuesCandidate, initialValuesInteraction } from "../utils/formikInitialValues";
 
 function NavbarComponent(props) {
 
@@ -19,109 +20,30 @@ function NavbarComponent(props) {
     const handleCloseInteractionModal = () => setShowInteractionModal(false);
     const handleShowInteractionModal = () => setShowInteractionModal(true);
 
-    const initialValuesCandidate = {
-        name: "",
-        surname: "",
-        mail: "",
-        phone: "",
-        status: ""
-    };
-
-    const CreateCandidateSchema = Yup.object().shape({
-        name: Yup.string().required("Name is required"),
-        surname: Yup.string().required("Surname is required"),
-        mail: Yup.string().email().required("Mail is required"),
-        phone: Yup.string().required("Phone is required"),
-        status: Yup.string().required("Status is required")
-    });
-
     const saveCandidate = (values) => {
-        return axios.post('/api/v1/candidates',
-            {
-                name: values.name,
-                surname: values.surname,
-                mail: values.mail,
-                phone: values.phone,
-                status: values.status,
-            })
+        axios.post('/api/v1/candidates', values)
             .then(function (response) {
                 handleCloseCandidateModal();
-                toast.success("Candidate successfully added.", {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
+                toastSuccess("Candidate successfully added.");
             })
             .catch(function (error) {
                 console.log(error);
-                toast.error(error.response.data, {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
+                toastError(error.response.data);
             })
             .finally(() => {
                 props.setIsCandidatesChanged(true)
             }) 
     }
 
-    const initialValuesInteraction = {
-        interactionType: "",
-        content: "",
-        date: "",
-        candidateResponded: ""
-    };
-
-    const CreateInteractionSchema = Yup.object().shape({
-        interactionType: Yup.string().required("Type is required"),
-        content: Yup.string().required("Content is required"),
-        date: Yup.date().required("Date is required"),
-        candidateResponded: Yup.string().required("Response is required")
-    });
-
     const saveInteraction = (values) => {
-        return axios.post('/api/v1/interactions?candidateId=' + props.candidateId,
-            {
-                interactionType: values.interactionType,
-                content: values.content,
-                date: values.date,
-                candidateResponded: values.candidateResponded,
-            })
+        axios.post('/api/v1/interactions?candidateId=' + props.candidateId, values)
             .then(function (response) {
                 handleCloseInteractionModal();
-                toast.success("Interaction successfully added.", {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
+                toastSuccess("Interaction successfully added.");
             })
             .catch(function (error) {
                 console.log(error);
-                toast.error(error.response.data, {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
+                toastError(error.response.data);
             }).finally(() => {
                 props.setIsInteractionsChanged(true)
             })
@@ -138,7 +60,7 @@ function NavbarComponent(props) {
                     </nav>
                 </div>
                 <h2>Peoplist TSS</h2>
-                <button type="button" className="btn btn-primary" onClick={props.addButtonName == "New Candidate" ? handleShowCandidateModal : handleShowInteractionModal}>{props.addButtonName}</button>
+                <button type="button" className="btn btn-primary" onClick={props.addButtonName === "New Candidate" ? handleShowCandidateModal : handleShowInteractionModal}>{props.addButtonName}</button>
             </div>
                 <Modal centered show={showCandidateModal} onHide={handleCloseCandidateModal}>
                     <Modal.Header closeButton>

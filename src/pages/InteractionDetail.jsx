@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from "axios"
-import * as Yup from "yup"
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import NavbarComponent from '../components/NavbarComponent';
 import { Button, Modal, Table } from 'react-bootstrap';
 import { BsArrowUpShort, BsArrowDownShort } from "react-icons/bs"
@@ -10,6 +9,9 @@ import moment from "moment"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import MyDatePicker from '../components/MyDatePicker';
 import PaginateComponent from '../components/PaginateComponent';
+import { initialValuesInteraction } from '../utils/formikInitialValues';
+import { UpdateInteractionSchema } from '../utils/yupSchemas';
+import { toastSuccess, toastError } from '../utils/toastMessages';
 
 function InteractionDetail() {
 
@@ -36,58 +38,37 @@ function InteractionDetail() {
     }
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [interactionsPerPage, setInteractionsPerPage] = useState(9);
+    const interactionsPerPage = 9;
     const [pageNumber, setPageNumber] = useState(1); // total page number
     const [sortedByState, setSortedByState] = useState(null);
     const [sortOrderState, setSortOrderState] = useState(null);
 
     const getCandidateInteractions = (currentPage, interactionsPerPage) => {
-        return axios.get(`/api/v1/interactions?candidateId=${location.state.candidateId}&page=${currentPage}&size=${interactionsPerPage}`)
-            .then(function (response) {
-                setCandidateInteractions(response.data.content)
-                setCurrentPage(response.data.number + 1);
-                setPageNumber(parseInt(response.data.totalPages));
-            })
-            .catch(function (error) {
-                if(error.response.status==404) {
-                    console.log(setCandidateInteractions([]))
-                }
-                toast.error(error.response.data, {
-                    toastId:"errorMessage1",
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
-            })
+        try {
+            const response = axios.get(`/api/v1/interactions?candidateId=${location.state.candidateId}&page=${currentPage}&size=${interactionsPerPage}`);
+            setCandidateInteractions(response.data.content);
+            setCurrentPage(response.data.number + 1);
+            setPageNumber(parseInt(response.data.totalPages));
+        } catch (error) {
+            if (error.response.status === 404) {
+                console.log(setCandidateInteractions([]));
+            }
+            toastError(error.response.data);
+        }
     }
 
     const getCandidateInteractionsSorted = (currentPage, interactionsPerPage, sortedBy, sortOrder) => {
-        return axios.get(`/api/v1/interactions?candidateId=${location.state.candidateId}&page=${currentPage}&size=${interactionsPerPage}&sortedBy=${sortedBy}&sortOrder=${sortOrder}`)
+        axios.get(`/api/v1/interactions?candidateId=${location.state.candidateId}&page=${currentPage}&size=${interactionsPerPage}&sortedBy=${sortedBy}&sortOrder=${sortOrder}`)
             .then(function (response) {
                 setCandidateInteractions(response.data.content)
                 setCurrentPage(response.data.number + 1);
                 setPageNumber(parseInt(response.data.totalPages));
             })
             .catch(function (error) {
-                if(error.response.status==404) {
+                if(error.response.status===404) {
                     console.log(setCandidateInteractions([]))
                 }
-                toast.error(error.response.data, {
-                    toastId:"errorMessage1",
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
+                toastError(error.response.data);
             })
     }
 
@@ -98,36 +79,26 @@ function InteractionDetail() {
     }
 
     const getInteractionById = (interactionId) => {
-        return axios.get('/api/v1/interactions/' + interactionId)
+        axios.get('/api/v1/interactions/' + interactionId)
             .then(function (response) {
                 setInteractionContent(response.data.content)
             })
             .catch(function (error) {
-                if(error.response.status==404) {
+                if(error.response.status===404) {
                     console.log(setCandidateInteractions([]))
                 }
-                toast.error(error.response.data, {
-                    toastId:"errorMessage1",
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
+                toastError(error.response.data);
             })
     }
 
     useEffect(() => {
-        if(sortedByState == null || sortOrderState == null) {
+        if(sortedByState === null || sortOrderState === null) {
             getCandidateInteractions(currentPage, interactionsPerPage)
         } else {
             getCandidateInteractionsSorted(currentPage, interactionsPerPage, sortedByState, sortOrderState)
         }
         setIsInteractionsChanged(false)
-    }, [isInteractionsChanged])
+    }, [isInteractionsChanged, currentPage, sortOrderState, sortedByState])
 
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -138,81 +109,32 @@ function InteractionDetail() {
     const handleCloseEditModal = () => setShowEditModal(false);
     const handleCloseDetailsModal = () => setShowDetailsModal(false);
 
-    const setInteractionInfo = (interactionInfo) => {
-        setSelectedInteraction({
-            id: interactionInfo.id,
-            candidateId: interactionInfo.candidateId,
-            interactionType: interactionInfo.interactionType,
-            content: interactionInfo.content,
-            date: new Date(moment.utc(interactionInfo.date).local().format('MM/DD/yyyy h:mm A')),
-            candidateResponded: interactionInfo.candidateResponded
-        })
-    }
-
     const handleShowDeleteModal = (event, interactionInfo) => {
-        setInteractionInfo(interactionInfo)
+        setSelectedInteraction(interactionInfo)
         setShowDeleteModal(true);
     }
 
     const handleShowEditModal = (event, interactionInfo) => {
-        setInteractionInfo(interactionInfo)
+        setSelectedInteraction(interactionInfo)
         setShowEditModal(true);
     }
 
     const handleShowDetailsModal = (event, interactionInfo) => {
-        setInteractionInfo(interactionInfo)
+        setSelectedInteraction(interactionInfo)
         getInteractionById(interactionInfo.id)
         setShowDetailsModal(true);
     }
 
-    const initialValues = {
-        interactionType: selectedInteraction.interactionType,
-        content: selectedInteraction.content,
-        date: selectedInteraction.date,
-        candidateResponded: selectedInteraction.candidateResponded
-    };
-
-    const UpdateInteractionSchema = Yup.object().shape({
-        interactionType: Yup.string().required("Type is required"),
-        content: Yup.string().required("Content is required"),
-        date: Yup.date().required("Date is required"),
-        candidateResponded: Yup.string().required("Response information is required")
-    });
-
     const updateInteraction = (values) => {
-        return axios.patch('/api/v1/interactions/' + selectedInteraction.id,
-            {
-                interactionType: values.interactionType,
-                content: values.content,
-                date: values.date,
-                candidateResponded: values.candidateResponded
-            })
+        axios.patch('/api/v1/interactions/' + selectedInteraction.id, values)
             .then(function (response) {
                 
                 handleCloseEditModal();
-                toast.success("Interaction info successfully updated.", {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
+                toastSuccess("Interaction info successfully updated.");
             })
             .catch(function (error) {
                 console.log(error);
-                toast.error(error.response.data, {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                })
+                toastError(error.response.data)
             })
             .finally(() => {
                 setIsInteractionsChanged(true)
@@ -222,30 +144,12 @@ function InteractionDetail() {
     const handleDeleteInteraction = (interactionId) => {
         axios.delete('/api/v1/interactions/' + interactionId)
             .then(function (response) {
-                toast.success(response.data, {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
+                toastSuccess(response.data);
                 handleCloseDeleteModal()
             })
             .catch(function (error) {
                 console.log(error);
-                toast.error(error.response.data, {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
+                toastError(error.response.data);
             })
             .finally(() => {
                 setIsInteractionsChanged(true)
@@ -335,7 +239,7 @@ function InteractionDetail() {
                 </Modal.Header>
                 <Modal.Body>
                     <Formik
-                        initialValues={initialValues}
+                        initialValues={initialValuesInteraction}
                         validationSchema={UpdateInteractionSchema}
                         onSubmit={(values) => {
                             updateInteraction(values)

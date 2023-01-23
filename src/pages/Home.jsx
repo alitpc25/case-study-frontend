@@ -4,13 +4,14 @@ import { Modal, Button } from 'react-bootstrap';
 import axios from "axios";
 import NavbarComponent from "../components/NavbarComponent";
 import { Table } from 'react-bootstrap';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import { Link } from "react-router-dom"
 import { Formik, Form, Field, ErrorMessage } from "formik"
-import * as Yup from 'yup';
-import ReactPaginate from 'react-paginate';
 import MyPhoneInput from "../components/MyPhoneInput";
 import PaginateComponent from "../components/PaginateComponent";
+import { toastSuccess, toastError } from "../utils/toastMessages";
+import { UpdateCandidateSchema } from "../utils/yupSchemas";
+import { initialValuesCandidate } from "../utils/formikInitialValues";
 
 function Home() {
 
@@ -23,6 +24,9 @@ function Home() {
         id: "",
         name: "",
         surname: "",
+        mail: "",
+        phone: "",
+        status: ""
     })
 
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -32,70 +36,24 @@ function Home() {
     const handleCloseDeleteModal = () => setShowDeleteModal(false);
     const handleCloseEditModal = () => setShowEditModal(false);
 
-    const setCandidateInfo = (candidateInfo) => {
-        setSelectedCandidate({
-            id: candidateInfo.id,
-            name: candidateInfo.name,
-            surname: candidateInfo.surname,
-            mail: candidateInfo.mail,
-            phone: candidateInfo.phone,
-            status: candidateInfo.status
-        })
-    }
-
     const handleShowDeleteModal = (event, candidateInfo) => {
-        setCandidateInfo(candidateInfo)
+        setSelectedCandidate(candidateInfo)
         setShowDeleteModal(true);
     }
 
     const handleShowEditModal = (event, candidateInfo) => {
-        setCandidateInfo(candidateInfo)
+        setSelectedCandidate(candidateInfo)
         setShowEditModal(true);
     }
 
-    const initialValues = {
-        mail: selectedCandidate.mail,
-        phone: selectedCandidate.phone,
-        status: selectedCandidate.status
-    };
-
-    const UpdateCandidateSchema = Yup.object().shape({
-        mail: Yup.string().email().required("Mail is required"),
-        phone: Yup.string().required("Phone is required"),
-        status: Yup.string().required("Status is required")
-    });
-
     const updateCandidate = async (values) => {
         try {
-            const response = await axios.patch(`/api/v1/candidates/updateInfo/${selectedCandidate.id}`,
-                {
-                    mail: values.mail,
-                    phone: values.phone,
-                    status: values.status,
-                });
+            const response = await axios.patch(`/api/v1/candidates/updateInfo/${selectedCandidate.id}`,values);
             handleCloseEditModal();
-            toast.success("Candidate " + response.data.name + " successfully edited.", {
-                position: "top-right",
-                autoClose: 1500,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-            });
+            toastSuccess("Candidate " + response.data.name + " successfully edited.");
         } catch (error) {
             console.log(error);
-            toast.error(error.response.data, {
-                position: "top-right",
-                autoClose: 1500,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-            });
+            toastError(error.response.data);
         } finally {
             setIsCandidatesChanged(true);
         }
@@ -107,7 +65,7 @@ function Home() {
     }
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [candidatesPerPage, setCandidatesPerPage] = useState(9);
+    const candidatesPerPage = 9;
     const [pageNumber, setPageNumber] = useState(1); // total page number
     const [sortedByState, setSortedByState] = useState(null);
     const [sortOrderState, setSortOrderState] = useState(null);
@@ -119,7 +77,7 @@ function Home() {
             setCurrentPage(response.data.number + 1);
             setPageNumber(parseInt(response.data.totalPages));
         } catch (error) {
-            if (error.response.status == 404) {
+            if (error.response.status === 404) {
                 console.log(setCandidates([]));
             }
         }
@@ -128,32 +86,14 @@ function Home() {
     const handleDeleteCandidate = (candidateId) => {
         axios.delete(`/api/v1/candidates/${candidateId}`)
             .then(function (response) {
-                toast.success("Candidate successfully removed.", {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
+                toastSuccess("Candidate successfully removed.");
                 handleCloseDeleteModal()
             })
             .catch(function (error) {
-                if (error.response.status == 404) {
+                if (error.response.status === 404) {
                     console.log(setCandidates([]))
                 }
-                toast.error(error.response.data, {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
+                toastError(error.response.data);
             })
             .finally(() => {
                 setIsCandidatesChanged(true)
@@ -169,7 +109,7 @@ function Home() {
             setCurrentPage(response.data.number + 1);
             setPageNumber(parseInt(response.data.totalPages));
         } catch (error) {
-            if (error.response.status == 404) {
+            if (error.response.status === 404) {
                 console.log(setCandidates([]));
             }
         }
@@ -186,40 +126,31 @@ function Home() {
     const handleSearch = (e) => {
         e.preventDefault()
         const nameAndSurname = searchKey.split(" ")
-        nameAndSurname[1] = (nameAndSurname[1] == undefined) ? "" : nameAndSurname[1] 
+        nameAndSurname[1] = (nameAndSurname[1] === undefined) ? "" : nameAndSurname[1] 
         axios.get(`/api/v1/candidates?page=${currentPage}&size=${candidatesPerPage}&name=${nameAndSurname[0]}&surname=${nameAndSurname[1]}`)
         .then((response) => {
             setCandidates(response.data.content);
             setCurrentPage(response.data.number + 1);
             setPageNumber(parseInt(response.data.totalPages));
         }).catch(function (error) {
-            if (error.response.status == 404) {
+            if (error.response.status === 404) {
                 console.log(setCandidates([]))
             }
-            toast.error(error.response.data, {
-                position: "top-right",
-                autoClose: 1500,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-            });
+            toastError(error.response.data);
         })
     }
 
     const tableHeaders = ["Name", "Surname", "Phone", "Mail", "Status", "Operations"]
 
     useEffect(() => {
-        if (sortedByState == null || sortOrderState == null) {
+        if (sortedByState === null || sortOrderState === null) {
             getCandidates(currentPage, candidatesPerPage);
         } else {
             getCandidatesSorted(currentPage, candidatesPerPage, sortedByState, sortOrderState)
         }
         setIsCandidatesChanged(false)
 
-    }, [isCandidatesChanged, currentPage, candidatesPerPage])
+    }, [isCandidatesChanged, currentPage, sortOrderState, sortedByState])
 
     return (
         <div>
@@ -228,7 +159,7 @@ function Home() {
                 <PaginateComponent handlePageClick={handlePageClick} pageNumber={pageNumber} />
                     <form className="form-inline d-flex flex-row">
                         <input className="form-control mr-sm-2" type="search" placeholder="Enter name surname" aria-label="Search" onChange={(e) => setSearchKey(e.target.value)} />
-                        <button disabled={(searchKey == "" || searchKey == undefined) ? true : false} className="btn btn-outline-success my-2 my-sm-0" onClick={handleSearch}>Search</button>
+                        <button disabled={(searchKey === "" || searchKey === undefined) ? true : false} className="btn btn-outline-success my-2 my-sm-0" onClick={handleSearch}>Search</button>
                     </form>
             </div>
             <div>
@@ -254,7 +185,7 @@ function Home() {
                         {candidates.map(c => {
                             return (
                                 <tr id={c.id}>
-                                    <td scope="row" className="px-6 pt-3">
+                                    <td className="px-6 pt-3">
                                         {c.name}
                                     </td>
                                     <td className="px-6 pt-3">
@@ -304,7 +235,7 @@ function Home() {
                     </Modal.Header>
                     <Modal.Body>
                         <Formik
-                            initialValues={initialValues}
+                            initialValues={initialValuesCandidate}
                             validationSchema={UpdateCandidateSchema}
                             onSubmit={(values) => {
                                 updateCandidate(values)
