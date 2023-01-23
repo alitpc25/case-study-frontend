@@ -20,11 +20,7 @@ function InteractionDetail() {
 
     const [selectedInteraction, setSelectedInteraction] = useState({
         id: "",
-        candidateId: "",
-        interactionType: "",
-        content: "",
-        date: "",
-        candidateResponded: ""
+        candidateId: ""
     })
 
     const [interactionContent, setInteractionContent] = useState("")
@@ -141,11 +137,7 @@ function InteractionDetail() {
     const setInteractionInfo = (interactionInfo) => {
         setSelectedInteraction({
             id: interactionInfo.id,
-            candidateId: interactionInfo.candidateId,
-            interactionType: interactionInfo.interactionType,
-            content: interactionInfo.content,
-            date: new Date(moment.utc(interactionInfo.date).local().format('MM/DD/yyyy h:mm A')),
-            candidateResponded: interactionInfo.candidateResponded
+            candidateId: interactionInfo.candidateId
         })
     }
 
@@ -166,10 +158,10 @@ function InteractionDetail() {
     }
 
     const initialValues = {
-        interactionType: selectedInteraction.interactionType,
-        content: selectedInteraction.content,
-        date: selectedInteraction.date,
-        candidateResponded: selectedInteraction.candidateResponded
+        interactionType: "",
+        content: "",
+        date: "",
+        candidateResponded: ""
     };
 
     const UpdateInteractionSchema = Yup.object().shape({
@@ -289,7 +281,7 @@ function InteractionDetail() {
                                 <button onClick={(event) => handleShowDetailsModal(event, c)} type="button" className="btn btn-primary">View Details</button>
                                 </td>
                                 <td className="px-6 pt-3">
-                                    {moment.utc(c.date).local().format('MM/DD/yyyy h:mm A')}
+                                    {moment.utc(c.date).local().format('HH:mm:ss DD-MM-YYYY')}
                                 </td>
                                 <td className="px-6 pt-3">
                                     {c.candidateResponded ? "True" : "False"}
@@ -311,7 +303,7 @@ function InteractionDetail() {
                     <Modal.Title>Are you sure?</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    Remove interaction at {moment.utc(selectedInteraction.date).local().format('MM/DD/yyyy h:mm A')}
+                    Remove interaction at {moment.utc(selectedInteraction.date).local().format('HH:mm:ss DD-MM-YYYY')}
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="danger" onClick={() => handleDeleteInteraction(selectedInteraction.id)}>
@@ -331,7 +323,7 @@ function InteractionDetail() {
 
             <Modal centered show={showEditModal} onHide={handleCloseEditModal} className="modal-lg">
                 <Modal.Header closeButton>
-                    <Modal.Title>Edit interaction at {moment.utc(selectedInteraction.date).local().format('MM/DD/yyyy h:mm A')}</Modal.Title>
+                    <Modal.Title>Edit interaction at {moment.utc(selectedInteraction.date).local().format('HH:mm:ss DD-MM-YYYY')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Formik
@@ -346,9 +338,10 @@ function InteractionDetail() {
                                 <div className=''>
                                     <label htmlFor="interactionType">Interaction Type</label>
                                     <div className='p-2'>
-                                        <Field name="interactionType" as="select" className="form-control form-select">
-                                            <option>Phone</option>
-                                            <option>Mail</option>
+                                        <Field name="interactionType" as="select" placeholder="Select type" className="form-control form-select">
+                                            <option defaultValue="SELECT">Select type</option>
+                                            <option value="PHONE">Phone</option>
+                                            <option value="MAIL">Mail</option>
                                         </Field>
                                         <ErrorMessage name="interactionType" component="div" />
                                     </div>
@@ -369,9 +362,10 @@ function InteractionDetail() {
                                 <div className=''>
                                     <label htmlFor="candidateResponded">Responded</label>
                                     <div className='p-2'>
-                                        <Field name="candidateResponded" as="select" className="form-control form-select">
-                                            <option>True</option>
-                                            <option>False</option>
+                                        <Field name="candidateResponded" as="select" placeholder="Select responded" className="form-control form-select">
+                                            <option defaultValue="SELECT">Select responded</option>
+                                            <option value="TRUE">True</option>
+                                            <option value="FALSE">False</option>
                                         </Field>
                                         <ErrorMessage name="candidateResponded" component="div" />
                                     </div>
