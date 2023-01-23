@@ -39,22 +39,22 @@ function InteractionDetail() {
     const [sortedByState, setSortedByState] = useState(null);
     const [sortOrderState, setSortOrderState] = useState(null);
 
-    const getCandidateInteractions = (currentPage, interactionsPerPage) => {
+    const getCandidateInteractions = async (currentPage, interactionsPerPage) => {
         try {
-            const response = axios.get(`/api/v1/interactions?candidateId=${location.state.candidateId}&page=${currentPage}&size=${interactionsPerPage}`);
+            const response = await axios.get(`/api/v1/interactions?candidateId=${location.state.candidateId}&page=${currentPage}&size=${interactionsPerPage}`);
             setCandidateInteractions(response.data.content);
             setCurrentPage(response.data.number + 1);
             setPageNumber(parseInt(response.data.totalPages));
         } catch (error) {
             if (error.response.status === 404) {
-                console.log(setCandidateInteractions([]));
+                setCandidateInteractions([]);
             }
             toastError(error.response.data);
         }
     }
 
-    const getCandidateInteractionsSorted = (currentPage, interactionsPerPage, sortedBy, sortOrder) => {
-        axios.get(`/api/v1/interactions?candidateId=${location.state.candidateId}&page=${currentPage}&size=${interactionsPerPage}&sortedBy=${sortedBy}&sortOrder=${sortOrder}`)
+    const getCandidateInteractionsSorted = async (currentPage, interactionsPerPage, sortedBy, sortOrder) => {
+        await axios.get(`/api/v1/interactions?candidateId=${location.state.candidateId}&page=${currentPage}&size=${interactionsPerPage}&sortedBy=${sortedBy}&sortOrder=${sortOrder}`)
             .then(function (response) {
                 setCandidateInteractions(response.data.content)
                 setCurrentPage(response.data.number + 1);
@@ -74,8 +74,8 @@ function InteractionDetail() {
         getCandidateInteractionsSorted(currentPage, interactionsPerPage, sortedBy, sortOrder);
     }
 
-    const getInteractionById = (interactionId) => {
-        axios.get('/api/v1/interactions/' + interactionId)
+    const getInteractionById = async (interactionId) => {
+        await axios.get('/api/v1/interactions/' + interactionId)
             .then(function (response) {
                 setInteractionContent(response.data.content)
             })
