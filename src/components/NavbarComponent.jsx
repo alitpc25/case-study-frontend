@@ -4,9 +4,9 @@ import { Modal, Button } from 'react-bootstrap';
 import axios from "axios";
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from 'yup';
-import { toast } from "react-toastify";
 import MyDatePicker from "./MyDatePicker";
 import MyPhoneInput from "./MyPhoneInput";
+import * as api from "../api/index.js"
 
 function NavbarComponent(props) {
 
@@ -36,43 +36,9 @@ function NavbarComponent(props) {
     });
 
     const saveCandidate = (values) => {
-        return axios.post('/api/v1/candidates',
-            {
-                name: values.name,
-                surname: values.surname,
-                mail: values.mail,
-                phone: values.phone,
-                status: values.status,
-            })
-            .then(function (response) {
-                handleCloseCandidateModal();
-                toast.success("Candidate successfully added.", {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-                toast.error(error.response.data, {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
-            })
-            .finally(() => {
-                props.setIsCandidatesChanged(true)
-            }) 
+        api.createCandidate(values)
+        handleCloseCandidateModal();
+        props.setCandidates(prev => [...prev, values])
     }
 
     const initialValuesInteraction = {
@@ -90,41 +56,9 @@ function NavbarComponent(props) {
     });
 
     const saveInteraction = (values) => {
-        return axios.post('/api/v1/interactions?candidateId=' + props.candidateId,
-            {
-                interactionType: values.interactionType,
-                content: values.content,
-                date: values.date,
-                candidateResponded: values.candidateResponded,
-            })
-            .then(function (response) {
-                handleCloseInteractionModal();
-                toast.success("Interaction successfully added.", {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
-            })
-            .catch(function (error) {
-                console.log(error);
-                toast.error(error.response.data, {
-                    position: "top-right",
-                    autoClose: 1500,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                });
-            }).finally(() => {
-                props.setIsInteractionsChanged(true)
-            })
+        api.createInteraction(values, props.candidateId)
+        handleCloseInteractionModal();
+        props.setCandidateInteractions(prev => [...prev, values])
     }
 
     return (
@@ -138,7 +72,7 @@ function NavbarComponent(props) {
                     </nav>
                 </div>
                 <h2>Peoplist TSS</h2>
-                <button type="button" className="btn btn-primary" onClick={props.addButtonName == "New Candidate" ? handleShowCandidateModal : handleShowInteractionModal}>{props.addButtonName}</button>
+                <button type="button" className="btn btn-primary" onClick={props.addButtonName === "New Candidate" ? handleShowCandidateModal : handleShowInteractionModal}>{props.addButtonName}</button>
             </div>
                 <Modal centered show={showCandidateModal} onHide={handleCloseCandidateModal}>
                     <Modal.Header closeButton>
