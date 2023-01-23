@@ -7,7 +7,6 @@ import { toastError, toastSuccess } from "../utils/toastMessages";
 import MyDatePicker from "./MyDatePicker";
 import MyPhoneInput from "./MyPhoneInput";
 import { CreateCandidateSchema, CreateInteractionSchema } from "../utils/yupSchemas";
-import { initialValuesCandidate, initialValuesInteraction } from "../utils/formikInitialValues";
 
 function NavbarComponent(props) {
 
@@ -19,6 +18,14 @@ function NavbarComponent(props) {
 
     const handleCloseInteractionModal = () => setShowInteractionModal(false);
     const handleShowInteractionModal = () => setShowInteractionModal(true);
+
+    const initialValuesCandidate = {
+        name: "",
+        surname: "",
+        mail: "",
+        phone: "",
+        status: ""
+    };
 
     const saveCandidate = (values) => {
         axios.post('/api/v1/candidates', values)
@@ -34,6 +41,13 @@ function NavbarComponent(props) {
                 props.setIsCandidatesChanged(true)
             }) 
     }
+
+    const initialValuesInteraction = {
+        interactionType: "",
+        content: "",
+        date: "",
+        candidateResponded: ""
+    };
 
     const saveInteraction = (values) => {
         axios.post('/api/v1/interactions?candidateId=' + props.candidateId, values)

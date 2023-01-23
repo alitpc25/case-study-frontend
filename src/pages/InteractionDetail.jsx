@@ -9,7 +9,6 @@ import moment from "moment"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import MyDatePicker from '../components/MyDatePicker';
 import PaginateComponent from '../components/PaginateComponent';
-import { initialValuesInteraction } from '../utils/formikInitialValues';
 import { UpdateInteractionSchema } from '../utils/yupSchemas';
 import { toastSuccess, toastError } from '../utils/toastMessages';
 
@@ -120,6 +119,13 @@ function InteractionDetail() {
         getInteractionById(interactionInfo.id)
         setShowDetailsModal(true);
     }
+
+    const initialValuesInteraction = {
+        interactionType: selectedInteraction.interactionType,
+        content: selectedInteraction.content,
+        date: selectedInteraction.date,
+        candidateResponded: selectedInteraction.candidateResponded
+    };
 
     const updateInteraction = (values) => {
         axios.patch('/api/v1/interactions/' + selectedInteraction.id, values)

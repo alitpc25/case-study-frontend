@@ -11,7 +11,6 @@ import MyPhoneInput from "../components/MyPhoneInput";
 import PaginateComponent from "../components/PaginateComponent";
 import { toastSuccess, toastError } from "../utils/toastMessages";
 import { UpdateCandidateSchema } from "../utils/yupSchemas";
-import { initialValuesCandidate } from "../utils/formikInitialValues";
 
 function Home() {
 
@@ -45,6 +44,12 @@ function Home() {
         setSelectedCandidate(candidateInfo)
         setShowEditModal(true);
     }
+
+    const initialValuesCandidate = {
+        mail: selectedCandidate.mail,
+        phone: selectedCandidate.phone,
+        status: selectedCandidate.status
+    };
 
     const updateCandidate = (values) => {
         axios.patch(`/api/v1/candidates/updateInfo/${selectedCandidate.id}`,values)
