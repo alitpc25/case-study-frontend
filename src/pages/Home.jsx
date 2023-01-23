@@ -46,17 +46,17 @@ function Home() {
         setShowEditModal(true);
     }
 
-    const updateCandidate = async (values) => {
-        try {
-            const response = await axios.patch(`/api/v1/candidates/updateInfo/${selectedCandidate.id}`,values);
+    const updateCandidate = (values) => {
+        axios.patch(`/api/v1/candidates/updateInfo/${selectedCandidate.id}`,values)
+        .then(response => {
             handleCloseEditModal();
             toastSuccess("Candidate " + response.data.name + " successfully edited.");
-        } catch (error) {
+        }).catch(error => {
             console.log(error);
             toastError(error.response.data);
-        } finally {
+        }).finally(() => {
             setIsCandidatesChanged(true);
-        }
+        })
     }
 
     const handlePageClick = (e) => {
@@ -70,17 +70,17 @@ function Home() {
     const [sortedByState, setSortedByState] = useState(null);
     const [sortOrderState, setSortOrderState] = useState(null);
 
-    const getCandidates = async (currentPage, candidatesPerPage) => {
-        try {
-            const response = await axios.get(`/api/v1/candidates?page=${currentPage}&size=${candidatesPerPage}`);
+    const getCandidates = (currentPage, candidatesPerPage) => {
+        axios.get(`/api/v1/candidates?page=${currentPage}&size=${candidatesPerPage}`)
+        .then(response => {
             setCandidates(response.data.content);
             setCurrentPage(response.data.number + 1);
             setPageNumber(parseInt(response.data.totalPages));
-        } catch (error) {
+        }).catch(error => {
             if (error.response.status === 404) {
                 console.log(setCandidates([]));
             }
-        }
+        })
     }
 
     const handleDeleteCandidate = (candidateId) => {
@@ -102,17 +102,17 @@ function Home() {
 
     // Sort requests
 
-    const getCandidatesSorted = async (currentPage, candidatesPerPage, sortedBy, sortOrder) => {
-        try {
-            const response = await axios.get(`/api/v1/candidates?page=${currentPage}&size=${candidatesPerPage}&sortedBy=${sortedBy}&sortOrder=${sortOrder}`);
+    const getCandidatesSorted = (currentPage, candidatesPerPage, sortedBy, sortOrder) => {
+        axios.get(`/api/v1/candidates?page=${currentPage}&size=${candidatesPerPage}&sortedBy=${sortedBy}&sortOrder=${sortOrder}`)
+        .then(response => {
             setCandidates(response.data.content);
             setCurrentPage(response.data.number + 1);
             setPageNumber(parseInt(response.data.totalPages));
-        } catch (error) {
+        }).catch(error => {
             if (error.response.status === 404) {
                 console.log(setCandidates([]));
             }
-        }
+        })
     }
 
     const handleSort = (e, sortedBy, sortOrder) => {
