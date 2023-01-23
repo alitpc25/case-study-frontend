@@ -123,14 +123,13 @@ function InteractionDetail() {
     const initialValuesInteraction = {
         interactionType: selectedInteraction.interactionType,
         content: selectedInteraction.content,
-        date: selectedInteraction.date,
+        date: new Date(selectedInteraction.date),
         candidateResponded: selectedInteraction.candidateResponded
     };
 
     const updateInteraction = (values) => {
         axios.patch('/api/v1/interactions/' + selectedInteraction.id, values)
             .then(function (response) {
-                
                 handleCloseEditModal();
                 toastSuccess("Interaction info successfully updated.");
             })
@@ -252,10 +251,9 @@ function InteractionDetail() {
                                 <div className=''>
                                     <label htmlFor="interactionType">Interaction Type</label>
                                     <div className='p-2'>
-                                        <Field name="interactionType" as="select" placeholder="Select type" className="form-control form-select">
-                                            <option defaultValue="SELECT">Select type</option>
-                                            <option value="PHONE">Phone</option>
-                                            <option value="MAIL">Mail</option>
+                                        <Field name="interactionType" as="select" className="form-control form-select">
+                                            <option value="Phone">Phone</option>
+                                            <option value="Mail">Mail</option>
                                         </Field>
                                         <ErrorMessage name="interactionType" component="div" />
                                     </div>
@@ -276,10 +274,9 @@ function InteractionDetail() {
                                 <div className=''>
                                     <label htmlFor="candidateResponded">Responded</label>
                                     <div className='p-2'>
-                                        <Field name="candidateResponded" as="select" placeholder="Select responded" className="form-control form-select">
-                                            <option defaultValue="SELECT">Select responded</option>
-                                            <option value="TRUE">True</option>
-                                            <option value="FALSE">False</option>
+                                        <Field name="candidateResponded" as="select" className="form-control form-select">
+                                            <option value={true}>True</option>
+                                            <option value={false}>False</option>
                                         </Field>
                                         <ErrorMessage name="candidateResponded" component="div" />
                                     </div>
