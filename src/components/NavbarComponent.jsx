@@ -4,9 +4,9 @@ import { Modal, Button } from 'react-bootstrap';
 import axios from "axios";
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from 'yup';
+import { toast } from "react-toastify";
 import MyDatePicker from "./MyDatePicker";
 import MyPhoneInput from "./MyPhoneInput";
-import * as api from "../api/index.js"
 
 function NavbarComponent(props) {
 
@@ -36,9 +36,43 @@ function NavbarComponent(props) {
     });
 
     const saveCandidate = (values) => {
-        api.createCandidate(values)
-        handleCloseCandidateModal();
-        props.setCandidates(prev => [...prev, values])
+        return axios.post('/api/v1/candidates',
+            {
+                name: values.name,
+                surname: values.surname,
+                mail: values.mail,
+                phone: values.phone,
+                status: values.status,
+            })
+            .then(function (response) {
+                handleCloseCandidateModal();
+                toast.success("Candidate successfully added.", {
+                    position: "top-right",
+                    autoClose: 1500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                });
+            })
+            .catch(function (error) {
+                console.log(error);
+                toast.error(error.response.data, {
+                    position: "top-right",
+                    autoClose: 1500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                });
+            })
+            .finally(() => {
+                props.setIsCandidatesChanged(true)
+            }) 
     }
 
     const initialValuesInteraction = {
@@ -56,9 +90,41 @@ function NavbarComponent(props) {
     });
 
     const saveInteraction = (values) => {
-        api.createInteraction(values, props.candidateId)
-        handleCloseInteractionModal();
-        props.setCandidateInteractions(prev => [...prev, values])
+        return axios.post('/api/v1/interactions?candidateId=' + props.candidateId,
+            {
+                interactionType: values.interactionType,
+                content: values.content,
+                date: values.date,
+                candidateResponded: values.candidateResponded,
+            })
+            .then(function (response) {
+                handleCloseInteractionModal();
+                toast.success("Interaction successfully added.", {
+                    position: "top-right",
+                    autoClose: 1500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                });
+            })
+            .catch(function (error) {
+                console.log(error);
+                toast.error(error.response.data, {
+                    position: "top-right",
+                    autoClose: 1500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                });
+            }).finally(() => {
+                props.setIsInteractionsChanged(true)
+            })
     }
 
     return (

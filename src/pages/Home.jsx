@@ -8,22 +8,21 @@ import { ToastContainer, toast } from 'react-toastify';
 import { Link } from "react-router-dom"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from 'yup';
+import ReactPaginate from 'react-paginate';
 import MyPhoneInput from "../components/MyPhoneInput";
 import PaginateComponent from "../components/PaginateComponent";
-import {toastSuccess, toastError} from "../utils/toastMessages.js"
-import * as api from "../api/index.js"
 
 function Home() {
 
     const [candidates, setCandidates] = useState([]);
 
+    // Refetch if candidates changed.
+    const [isCandidatesChanged, setIsCandidatesChanged] = useState(false)
+
     const [selectedCandidate, setSelectedCandidate] = useState({
         id: "",
         name: "",
         surname: "",
-        mail: "",
-        phone: "",
-        status: "" 
     })
 
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -33,13 +32,24 @@ function Home() {
     const handleCloseDeleteModal = () => setShowDeleteModal(false);
     const handleCloseEditModal = () => setShowEditModal(false);
 
+    const setCandidateInfo = (candidateInfo) => {
+        setSelectedCandidate({
+            id: candidateInfo.id,
+            name: candidateInfo.name,
+            surname: candidateInfo.surname,
+            mail: candidateInfo.mail,
+            phone: candidateInfo.phone,
+            status: candidateInfo.status
+        })
+    }
+
     const handleShowDeleteModal = (event, candidateInfo) => {
-        setSelectedCandidate(candidateInfo)
+        setCandidateInfo(candidateInfo)
         setShowDeleteModal(true);
     }
 
     const handleShowEditModal = (event, candidateInfo) => {
-        setSelectedCandidate(candidateInfo)
+        setCandidateInfo(candidateInfo)
         setShowEditModal(true);
     }
 
@@ -56,12 +66,44 @@ function Home() {
     });
 
     const updateCandidate = async (values) => {
-        api.updateCandidate(values, selectedCandidate.id)
-        handleCloseEditModal();
+        try {
+            const response = await axios.patch(`/api/v1/candidates/updateInfo/${selectedCandidate.id}`,
+                {
+                    mail: values.mail,
+                    phone: values.phone,
+                    status: values.status,
+                });
+            handleCloseEditModal();
+            toast.success("Candidate " + response.data.name + " successfully edited.", {
+                position: "top-right",
+                autoClose: 1500,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+            });
+        } catch (error) {
+            console.log(error);
+            toast.error(error.response.data, {
+                position: "top-right",
+                autoClose: 1500,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+            });
+        } finally {
+            setIsCandidatesChanged(true);
+        }
     }
 
     const handlePageClick = (e) => {
         setCurrentPage(e.selected + 1)
+        setIsCandidatesChanged(true)
     }
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -71,25 +113,66 @@ function Home() {
     const [sortOrderState, setSortOrderState] = useState(null);
 
     const getCandidates = async (currentPage, candidatesPerPage) => {
-        const response = await api.getAllCandidates(currentPage, candidatesPerPage);
-        setCandidates(response.data.content);
-        setCurrentPage(response.data.number + 1);
-        setPageNumber(parseInt(response.data.totalPages));
+        try {
+            const response = await axios.get(`/api/v1/candidates?page=${currentPage}&size=${candidatesPerPage}`);
+            setCandidates(response.data.content);
+            setCurrentPage(response.data.number + 1);
+            setPageNumber(parseInt(response.data.totalPages));
+        } catch (error) {
+            if (error.response.status == 404) {
+                console.log(setCandidates([]));
+            }
+        }
     }
 
     const handleDeleteCandidate = (candidateId) => {
-        handleCloseDeleteModal()
-        setCandidates((prev) => prev.filter(item => item.id !== candidateId))
-        api.deleteCandidate(candidateId)
+        axios.delete(`/api/v1/candidates/${candidateId}`)
+            .then(function (response) {
+                toast.success("Candidate successfully removed.", {
+                    position: "top-right",
+                    autoClose: 1500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                });
+                handleCloseDeleteModal()
+            })
+            .catch(function (error) {
+                if (error.response.status == 404) {
+                    console.log(setCandidates([]))
+                }
+                toast.error(error.response.data, {
+                    position: "top-right",
+                    autoClose: 1500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                });
+            })
+            .finally(() => {
+                setIsCandidatesChanged(true)
+            })
     }
 
     // Sort requests
 
     const getCandidatesSorted = async (currentPage, candidatesPerPage, sortedBy, sortOrder) => {
-        const response = await api.getAllCandidatesSorted(currentPage, candidatesPerPage, sortedBy, sortOrder);
-        setCandidates(response.data.content);
-        setCurrentPage(response.data.number + 1);
-        setPageNumber(parseInt(response.data.totalPages));
+        try {
+            const response = await axios.get(`/api/v1/candidates?page=${currentPage}&size=${candidatesPerPage}&sortedBy=${sortedBy}&sortOrder=${sortOrder}`);
+            setCandidates(response.data.content);
+            setCurrentPage(response.data.number + 1);
+            setPageNumber(parseInt(response.data.totalPages));
+        } catch (error) {
+            if (error.response.status == 404) {
+                console.log(setCandidates([]));
+            }
+        }
     }
 
     const handleSort = (e, sortedBy, sortOrder) => {
@@ -100,14 +183,30 @@ function Home() {
 
     const [searchKey, setSearchKey] = useState("");
 
-    const handleSearch = async (e) => {
+    const handleSearch = (e) => {
         e.preventDefault()
         const nameAndSurname = searchKey.split(" ")
         nameAndSurname[1] = (nameAndSurname[1] == undefined) ? "" : nameAndSurname[1] 
-        const response = await api.findCandidateByNameAndSurname(currentPage, candidatesPerPage, nameAndSurname[0], nameAndSurname[1])
-        setCandidates(response.data.content);
-        setCurrentPage(response.data.number + 1);
-        setPageNumber(parseInt(response.data.totalPages));
+        axios.get(`/api/v1/candidates?page=${currentPage}&size=${candidatesPerPage}&name=${nameAndSurname[0]}&surname=${nameAndSurname[1]}`)
+        .then((response) => {
+            setCandidates(response.data.content);
+            setCurrentPage(response.data.number + 1);
+            setPageNumber(parseInt(response.data.totalPages));
+        }).catch(function (error) {
+            if (error.response.status == 404) {
+                console.log(setCandidates([]))
+            }
+            toast.error(error.response.data, {
+                position: "top-right",
+                autoClose: 1500,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+            });
+        })
     }
 
     const tableHeaders = ["Name", "Surname", "Phone", "Mail", "Status", "Operations"]
@@ -118,12 +217,13 @@ function Home() {
         } else {
             getCandidatesSorted(currentPage, candidatesPerPage, sortedByState, sortOrderState)
         }
+        setIsCandidatesChanged(false)
 
-    }, [currentPage])
+    }, [isCandidatesChanged, currentPage, candidatesPerPage])
 
     return (
         <div>
-            <NavbarComponent addButtonName="New Candidate" setCandidates={setCandidates}></NavbarComponent>
+            <NavbarComponent addButtonName="New Candidate" setIsCandidatesChanged={setIsCandidatesChanged}></NavbarComponent>
             <div className="d-flex justify-content-evenly p-2" >
                 <PaginateComponent handlePageClick={handlePageClick} pageNumber={pageNumber} />
                     <form className="form-inline d-flex flex-row">
@@ -136,8 +236,8 @@ function Home() {
                 <Table striped bordered hover>
                     <thead>
                         <tr>
-                            {tableHeaders.map((headerName, i) => {
-                                return (<th key={i} scope="col" className="px-6 ">
+                            {tableHeaders.map(headerName => {
+                                return (<th scope="col" className="px-6 ">
                                     <div className="flex items-center">
                                         {headerName}
                                         {(headerName === "Name" || headerName === "Surname" || headerName === "Status") ? <>
@@ -151,9 +251,9 @@ function Home() {
                         </tr>
                     </thead>
                     <tbody>
-                        {candidates.map((c, i) => {
+                        {candidates.map(c => {
                             return (
-                                <tr id={i}>
+                                <tr id={c.id}>
                                     <td scope="row" className="px-6 pt-3">
                                         {c.name}
                                     </td>
