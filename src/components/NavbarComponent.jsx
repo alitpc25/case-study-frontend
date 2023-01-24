@@ -34,7 +34,6 @@ function NavbarComponent(props) {
                 toastSuccess("Candidate successfully added.");
             })
             .catch(function (error) {
-                console.log(error);
                 toastError(error.response.data);
             })
             .finally(() => {
@@ -56,7 +55,6 @@ function NavbarComponent(props) {
                 toastSuccess("Interaction successfully added.");
             })
             .catch(function (error) {
-                console.log(error);
                 toastError(error.response.data);
             }).finally(() => {
                 props.setIsInteractionsChanged(true)

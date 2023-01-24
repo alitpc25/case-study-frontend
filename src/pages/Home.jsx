@@ -57,7 +57,6 @@ function Home() {
             handleCloseEditModal();
             toastSuccess("Candidate " + response.data.name + " successfully edited.");
         }).catch(error => {
-            console.log(error);
             toastError(error.response.data);
         }).finally(() => {
             setIsCandidatesChanged(true);
@@ -83,7 +82,7 @@ function Home() {
             setPageNumber(parseInt(response.data.totalPages));
         }).catch(error => {
             if (error.response.status === 404) {
-                console.log(setCandidates([]));
+                setCandidates([]);
             }
         })
     }
@@ -96,7 +95,7 @@ function Home() {
             })
             .catch(function (error) {
                 if (error.response.status === 404) {
-                    console.log(setCandidates([]))
+                    setCandidates([])
                 }
                 toastError(error.response.data);
             })
@@ -115,7 +114,7 @@ function Home() {
             setPageNumber(parseInt(response.data.totalPages));
         }).catch(error => {
             if (error.response.status === 404) {
-                console.log(setCandidates([]));
+                setCandidates([]);
             }
         })
     }
@@ -139,7 +138,7 @@ function Home() {
             setPageNumber(parseInt(response.data.totalPages));
         }).catch(function (error) {
             if (error.response.status === 404) {
-                console.log(setCandidates([]))
+                setCandidates([])
             }
             toastError(error.response.data);
         })

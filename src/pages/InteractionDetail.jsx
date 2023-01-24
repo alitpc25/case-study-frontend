@@ -61,7 +61,7 @@ function InteractionDetail() {
             })
             .catch(function (error) {
                 if(error.response.status===404) {
-                    console.log(setCandidateInteractions([]))
+                    setCandidateInteractions([])
                 }
                 toastError(error.response.data);
             })
@@ -80,7 +80,7 @@ function InteractionDetail() {
             })
             .catch(function (error) {
                 if(error.response.status===404) {
-                    console.log(setCandidateInteractions([]))
+                    setCandidateInteractions([])
                 }
                 toastError(error.response.data);
             })
@@ -134,7 +134,6 @@ function InteractionDetail() {
                 toastSuccess("Interaction info successfully updated.");
             })
             .catch(function (error) {
-                console.log(error);
                 toastError(error.response.data)
             })
             .finally(() => {
@@ -149,7 +148,6 @@ function InteractionDetail() {
                 handleCloseDeleteModal()
             })
             .catch(function (error) {
-                console.log(error);
                 toastError(error.response.data);
             })
             .finally(() => {
