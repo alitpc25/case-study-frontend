@@ -162,7 +162,7 @@ function Home() {
             <NavbarComponent addButtonName="New Candidate" setIsCandidatesChanged={setIsCandidatesChanged}></NavbarComponent>
             <div className="d-flex justify-content-evenly p-2" >
                 <PaginateComponent handlePageClick={handlePageClick} pageNumber={pageNumber} />
-                    <form className="form-inline d-flex flex-row">
+                    <form className="form-inline d-flex flex-row h-100">
                         <input className="form-control mr-sm-2" type="search" placeholder="Enter name surname" aria-label="Search" onChange={(e) => setSearchKey(e.target.value)} />
                         <button disabled={(searchKey === "" || searchKey === undefined) ? true : false} className="btn btn-outline-success my-2 my-sm-0" onClick={handleSearch}>Search</button>
                     </form>
